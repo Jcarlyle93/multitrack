@@ -2,5 +2,6 @@
 ## Title: MultiTrack
 ## Notes: Automatically switches between herb and mineral tracking
 ## Version: 1.0
+## SavedVariables: MultiTrackDB
 
 MultiTrack.lua

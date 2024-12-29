@@ -3,12 +3,12 @@ local frame = CreateFrame("Frame")
 
 -- Default settings
 local defaults = {
-    enabled = false
-    interval =
+    enabled = false,
+    interval = 5
 }
 
 local timeSinceLastSwitch = 0
-local current tracking = "HERB"
+local currentTracking = "HERB"
 local inCombat = false
 local hasHostileTarget = false
 
@@ -17,10 +17,7 @@ local function InitialiseSettings()
     if not MultiTrackDB then
         MultiTrackDB = CopyTable(defaults)
     end
-
-    isEnabled = MultiTrackDB.enabled
-    switchInterval = MultiTrackDB.interval
-
+    
 end
 
 local function CheckTargetHostile()
@@ -33,7 +30,7 @@ local function CheckTargetHostile()
         
         if UnitCanAttack("player", "target") and not UnitIsDead("target") then
             hasHostileTarget = true
-            if isEnabled then
+            if MultiTrackDB.enabled then
                 print("MultiTrack: Paused - hostile target")
             end
         else
@@ -65,30 +62,29 @@ end
 
 local function OnUpdate(self, elapsed)
 
-    if not isEnabled then return end
+    if not MultiTrackDB.enabled then return end
 
     timeSinceLastSwitch = timeSinceLastSwitch + elapsed
 
-    if timeSinceLastSwitch >= switchInterval then
+    if timeSinceLastSwitch >= MultiTrackDB.interval then
         ToggleTracking()
         timeSinceLastSwitch = 0
     end
 
 end
 
-local function HandleShashCommands(msg)
+local function HandleSlashCommands(msg)
     
     local command, arg = strsplit(" ", string.lower(msg), 2)
 
     if command == "toggle" then
-        isEnabled = not isEnabled
-        print("MutliTrack: Auto-switching " .. (isEnabled and "enabled" or "disabled"))
+        MultiTrackDB.enabled = not MultiTrackDB.enabled
+        print("MutliTrack: Auto-switching " .. (MultiTrackDB.enabled and "enabled" or "disabled"))
 
     elseif command == "interval" then
         local newInterval = tonumber(arg)
 
         if newInterval and newInterval >=1 then
-            switchInterval = newInterval
             MultiTrackDB.interval = newInterval
             print("MultiTrack: Interval set to " .. newInterval .. " seconds")
         else
@@ -96,8 +92,8 @@ local function HandleShashCommands(msg)
         end
 
     elseif command == "status" then
-        print("Multitrack Status:" .. (isEnabled and "Enabled" or "Disabled"))
-        print("Interval switcing at " .. switchInterval .. " seconds")
+        print("Multitrack Status:" .. (MultiTrackDB.enabled and "Enabled" or "Disabled"))
+        print("Interval switcing at " .. MultiTrackDB.interval .. " seconds")
 
     else
         print("MutliTrack Commands:")
@@ -121,19 +117,19 @@ frame:SetScript("OnEvent", function(self, event, ...)
         InitialiseSettings()
     elseif event == "PLAYER_REGEN_DISABLED" then
         inCombat = true
-        if isEnabled then
+        if MultiTrackDB.enabled then
             print("MultiTrack: Paused due to combat to avoid GCD conflict")
         end
     elseif event == "PLAYER_REGEN_ENABLED" then
         inCombat = false
-        if isEnabled then
+        if MultiTrackDB.enabled then
             print("MultiTrack: Resuming auto-switching")
         end
     elseif event == "PLAYER_TARGET_CHANGED" then
         print("Target changed event fired") -- Debug print
         local wasHostile = hasHostileTarget
         CheckTargetHostile()
-        if wasHostile and not hasHostileTarget and isEnabled and not inCombat then
+        if wasHostile and not hasHostileTarget and MultiTrackDB.enabled and not inCombat then
             print("MultiTrack: Resuming auto-switching")
         end
     end
@@ -142,4 +138,4 @@ end)
 
 SLASH_MULTITRACK1 = "/mtrack"
 SLASH_MULTITRACK2 = "/multitrack"
-SlashCmdList["MULTITRACK"] = HandleShashCommands
+SlashCmdList["MULTITRACK"] = HandleSlashCommands
