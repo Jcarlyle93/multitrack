@@ -1,0 +1,6 @@
+## Interface: 11501
+## Title: MultiTrack
+## Notes: Automatically switches between herb and mineral tracking
+## Version: 1.0
+
+MultiTrack.lua
